@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Portfolio Builder</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#18191A;background:#fff}
+  .app{display:grid;grid-template-columns:var(--panel-w,380px) 7px 1fr;height:100vh;min-height:600px}
+  .app.preview-only{grid-template-columns:1fr}
+  .app.editor-only{grid-template-columns:1fr}
+  .app.preview-only .panel,.app.preview-only .gutter{display:none}
+  .app.editor-only .preview,.app.editor-only .gutter{display:none}
+  /* draggable divider */
+  .gutter{background:#e6e3db;cursor:col-resize;position:relative;transition:background .15s}
+  .gutter:hover,.gutter.drag{background:#2C6E49}
+  .gutter::after{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:2px;height:28px;border-radius:2px;background:#b9b5aa}
+  .gutter:hover::after,.gutter.drag::after{background:#fff}
+  /* view-mode icon buttons */
+  .iconbtn{font:inherit;font-size:1rem;line-height:1;width:30px;height:28px;border-radius:7px;
+    border:1px solid #d8d5cd;background:#fff;color:#333;cursor:pointer;display:inline-flex;
+    align-items:center;justify-content:center;padding:0}
+  .iconbtn:hover{background:#2C6E49;color:#fff;border-color:#2C6E49}
+  .panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:16px}
+  .bar-left{display:flex;align-items:center;gap:10px}
+  /* ---- controls panel ---- */
+  .panel{border-right:1px solid #e6e3db;background:#FAF9F6;display:flex;flex-direction:column;overflow:hidden}
+  .panel-scroll{flex:1;overflow-y:auto;padding:20px}
+  .panel h1{font-size:1.15rem;margin-bottom:4px}
+  .panel .sub{font-size:.85rem;color:#6A6A66;margin-bottom:18px}
+  .group{margin-bottom:18px}
+  .group label{display:block;font-size:.8rem;font-weight:600;margin-bottom:5px;color:#333}
+  .group .hint{font-size:.72rem;color:#8a8a86;margin-bottom:6px;line-height:1.4}
+  input[type=text],input[type=email],textarea{width:100%;font:inherit;font-size:.85rem;
+    padding:8px 10px;border:1px solid #d8d5cd;border-radius:8px;background:#fff;color:#18191A}
+  textarea{resize:vertical;line-height:1.5}
+  input:focus,textarea:focus{outline:2px solid #2C6E49;outline-offset:1px}
+  .row{display:flex;gap:10px;align-items:center}
+  input[type=color]{width:46px;height:34px;border:1px solid #d8d5cd;border-radius:8px;
+    background:#fff;cursor:pointer;padding:2px}
+  .actions{flex:0 0 auto;background:#FAF9F6;padding:12px 20px 16px;
+    border-top:1px solid #e6e3db;display:grid;gap:7px;box-shadow:0 -8px 18px rgba(0,0,0,.06)}
+  .action-row{display:grid;gap:6px}
+  .action-row.two{grid-template-columns:1fr 1fr}
+  .action-row.three{grid-template-columns:1fr 1fr 1fr}
+  .btn.sm{padding:8px 4px;font-size:.78rem;white-space:nowrap}
+  .btn{font:inherit;font-size:.9rem;font-weight:500;padding:11px;border-radius:9px;
+    border:0;cursor:pointer;background:#2C6E49;color:#fff}
+  .btn:hover{background:#1B4332}
+  .btn.ghost{background:#fff;color:#18191A;border:1px solid #d8d5cd}
+  .btn.ghost:hover{background:#18191A;color:#fff}
+  .note{font-size:.72rem;color:#8a8a86;text-align:center;line-height:1.4}
+  /* ---- preview panel ---- */
+  .preview{display:flex;flex-direction:column;background:#eceae3}
+  .preview .bar{padding:8px 14px;font-size:.78rem;color:#6A6A66;border-bottom:1px solid #ddd9d0;
+    background:#f4f2ec;display:flex;justify-content:space-between;align-items:center}
+  .preview iframe{flex:1;width:100%;border:0;background:#F4F2EC}
+  /* code drawer */
+  .drawer{display:none;border-top:1px solid #ddd9d0;background:#1b1d1a}
+  .drawer.open{display:block}
+  .drawer textarea{width:100%;height:180px;border:0;border-radius:0;background:#1b1d1a;
+    color:#cfe3d4;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.72rem;padding:12px}
+  @media(max-width:760px){
+    .app,.app.preview-only,.app.editor-only{grid-template-columns:1fr;height:auto}
+    .gutter{display:none}
+    .panel{display:block;overflow:visible}
+    .panel-scroll{overflow:visible}
+    .actions{box-shadow:none}
+    .preview iframe{height:520px}
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- ============ CONTROLS ============ -->
+  <div class="panel">
+    <div class="panel-scroll">
+    <div class="panel-head">
+      <h1>Portfolio Builder</h1>
+      <button class="iconbtn" id="togglePreview" title="Expand builder to full width (hide preview)">⤢</button>
+    </div>
+
+    <div class="group">
+      <label>Your name</label>
+      <input type="text" id="name" value="Damodharan Panneerselvam" />
+    </div>
+    <div class="group">
+      <label>Role &amp; location</label>
+      <input type="text" id="role" value="Global Head, Product Adoption &amp; Learning Experience · Chennai, India" />
+    </div>
+    <div class="group">
+      <label>Hero headline</label>
+      <textarea id="headline" rows="2">Driving product adoption, customer success, and business growth through scalable learning experiences.</textarea>
+    </div>
+    <div class="group">
+      <label>Hero subtext</label>
+      <textarea id="lead" rows="3">Learning and product enablement leader with 15+ years of experience building global learning ecosystems, product adoption strategies, digital academies, and performance-driven enablement programs that accelerate customer and employee success.</textarea>
+    </div>
+    <div class="group">
+      <label>Story video URL</label>
+      <p class="hint">Paste a link from YouTube, Vimeo, Google Drive, Loom, an MP4 file, or any embed URL — powers the “Watch My Story” button (blank = hidden).</p>
+      <input type="text" id="videourl" value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" />
+    </div>
+    <div class="group">
+      <label>Photo URL</label>
+      <p class="hint">Headshot for the hero &amp; About. Use an online image link, a Google Drive share link, or a local filename like <b>photo.jpg</b> uploaded next to index.html. Blank = text-only.</p>
+      <input type="text" id="photo" value="https://ui-avatars.com/api/?name=Damodharan+Panneerselvam&amp;background=2C6E49&amp;color=fff&amp;size=512&amp;bold=true" />
+    </div>
+    <div class="group">
+      <label>Home stats strip</label>
+      <p class="hint">One per line:  Value :: Label  (leave blank to hide)</p>
+      <textarea id="stats" rows="4">15+ :: Years of experience
+Global :: Programs &amp; teams led
+8 :: Flagship initiatives
+AI-Powered :: Learning at scale</textarea>
+    </div>
+    <div class="group">
+      <label>Email</label>
+      <input type="email" id="email" value="your-email@domain.com" />
+    </div>
+    <div class="group">
+      <label>Phone</label>
+      <input type="text" id="phone" value="+91 XXXXX XXXXX" />
+    </div>
+    <div class="group">
+      <label>LinkedIn URL</label>
+      <p class="hint">Full link, e.g. https://linkedin.com/in/yourname (leave blank to hide)</p>
+      <input type="text" id="linkedin" value="https://linkedin.com/in/your-profile" />
+    </div>
+    <div class="group">
+      <label>Resume / CV link</label>
+      <p class="hint">Local file like <b>resume.pdf</b> (uploaded next to index.html), a Google Drive link, or any URL. Blank = hide the button.</p>
+      <input type="text" id="resume" value="resume.pdf" />
+    </div>
+    <div class="group">
+      <label>Accent color</label>
+      <div class="row">
+        <input type="color" id="accent" value="#2C6E49" />
+        <span class="hint" style="margin:0">Buttons, links &amp; highlights</span>
+      </div>
+    </div>
+
+    <div class="group">
+      <label>About — paragraphs</label>
+      <p class="hint">One paragraph per blank line.</p>
+      <textarea id="about" rows="8">I help organizations maximize product value by connecting learning, adoption, and business outcomes. Over the past 15+ years, I have led digital learning transformations, product enablement initiatives, and customer education programs across global organizations.
+
+My expertise spans product adoption strategy, learning experience design, customer enablement, performance consulting, learning technologies, and AI-powered learning solutions. I enjoy building scalable ecosystems that help users learn faster, adopt products confidently, and achieve measurable business results.
+
+Currently, I lead Product Adoption and Learning Experience initiatives, partnering with product, customer success, sales, and engineering teams to create impactful learning experiences that drive engagement, retention, and customer success worldwide.</textarea>
+    </div>
+
+    <div class="group">
+      <label>What I do (services)</label>
+      <p class="hint">One per line, format:  Title :: description</p>
+      <textarea id="services" rows="7">Product Adoption Strategy :: Design and execute global adoption programs that increase product utilization and customer success.
+Customer Education :: Build scalable learning academies, certification programs, and self-service learning ecosystems.
+Learning Experience Design :: Create engaging learning journeys that improve knowledge transfer and performance outcomes.
+Digital Learning Transformation :: Modernize learning ecosystems using AI, analytics, automation, and learning technologies.
+Enablement Programs :: Develop role-based onboarding, product training, and continuous learning programs for customers and internal teams.
+Learning Analytics :: Measure adoption, engagement, proficiency, and business impact through data-driven insights.</textarea>
+    </div>
+
+    <div class="group">
+      <label>Expertise</label>
+      <p class="hint">One group per line:  Category :: item, item, item</p>
+      <textarea id="expertise" rows="6">Strategy :: Product Adoption, Customer Success Enablement, Learning Strategy, Business Alignment
+Leadership :: Global Program Leadership, Team Leadership, Stakeholder Management, Change Management
+Learning &amp; Technology :: Learning Experience Design, Learning Analytics, Learning Platforms, AI for Learning
+Business Impact :: Performance Consulting, User Engagement, Product Utilization, Adoption Measurement</textarea>
+    </div>
+
+    <div class="group">
+      <label>Work / projects</label>
+      <p class="hint">One project per block, separated by a line with <b>===</b>.<br>
+        Line 1:  TAG :: Title :: link (link optional)<br>
+        Then:  Challenge:  /  Solution:  /  Impact: a | b | c  /  Tech: a | b | c</p>
+      <textarea id="projects" rows="16">PRODUCT ADOPTION :: Global Product Adoption Framework
+Challenge: Customers were onboarding inconsistently, resulting in slower product adoption and underutilization of key features.
+Solution: Designed a role-based product adoption framework combining onboarding journeys, learning paths, performance support assets, and success milestones.
+Impact: Improved onboarding consistency | Increased feature awareness | Reduced dependency on support teams | Accelerated time-to-value for customers
+Tech: LMS | Knowledge Base | Product Analytics | Articulate Storyline | Walkthrough Tools
+===
+CUSTOMER EDUCATION :: Customer Learning Academy
+Challenge: Customers lacked a structured approach to learning the platform, leading to repeated support requests and lower engagement.
+Solution: Built a self-service learning academy with role-based curricula, certifications, microlearning, and searchable learning resources.
+Impact: Improved customer self-sufficiency | Increased learning engagement | Reduced repetitive support requests | Enhanced customer experience
+Tech: LMS | SCORM | Video Learning Platform | Analytics Dashboard
+===
+ANALYTICS :: Learning Analytics Dashboard
+Challenge: Leadership lacked visibility into learning effectiveness, adoption trends, and business outcomes.
+Solution: Developed executive dashboards combining learning, adoption, and engagement metrics into a unified reporting experience.
+Impact: Improved decision-making | Enabled data-driven learning investments | Increased visibility of adoption trends | Better executive reporting
+Tech: Power BI | Learning Analytics | Product Analytics | SQL | Excel
+===
+CAREER DEVELOPMENT :: DAMSAN Career Journey Platform
+Challenge: Students and professionals lacked a structured roadmap to understand career requirements, skill gaps, and progression opportunities.
+Solution: Designed a competency-based career journey platform featuring role templates, skill assessments, learning pathways, portfolio building, and career readiness tracking.
+Impact: Improved career awareness | Structured learning progression | Personalized development planning | Enhanced employability readiness
+Tech: AI | JSON Frameworks | Supabase | Learning Analytics | Career Mapping Models
+===
+ENABLEMENT :: Product Enablement Center of Excellence
+Challenge: Product learning initiatives were being developed independently across teams, resulting in inconsistent learning experiences, duplicated efforts, and limited visibility into adoption outcomes.
+Solution: Established a Product Enablement Center of Excellence (CoE) with governance frameworks, content standards, learning design guidelines, operating models, and success metrics. Created a centralized approach for onboarding, product training, and continuous enablement.
+Impact: Standardized product learning across teams | Improved scalability of enablement programs | Reduced duplication of effort | Increased alignment between Product, Customer Success, and Learning teams | Enhanced visibility into adoption and learning outcomes
+Tech: LMS Platforms | Knowledge Management Systems | Learning Analytics | Articulate Suite | AI-Assisted Content Creation Tools
+===
+DIGITAL LEARNING :: AI-Powered Learning Ecosystem
+Challenge: Traditional learning workflows required significant manual effort to create, update, and distribute learning content, making it difficult to keep pace with product changes.
+Solution: Implemented AI-assisted workflows for content creation, knowledge discovery, personalized learning recommendations, and learning support. Integrated AI tools into the learning ecosystem to accelerate content production and improve learner experiences.
+Impact: Faster learning content development cycles | Improved learner access to relevant knowledge | Increased personalization of learning experiences | Enhanced scalability of learning operations | Reduced administrative effort
+Tech: Generative AI Platforms | Learning Management Systems | Knowledge Bases | Automation Tools | Analytics Platforms
+===
+LEADERSHIP :: Global Learning Transformation Program
+Challenge: Learning operations were fragmented across regions, with inconsistent processes, duplicated assets, and limited measurement of business impact.
+Solution: Led a global transformation initiative to modernize learning operations, establish common standards, improve governance, and introduce scalable digital learning practices aligned with business objectives.
+Impact: Improved operational efficiency | Increased reuse of learning assets | Enhanced learner experience consistency | Strengthened alignment between learning investments and business goals | Enabled global scalability of learning programs
+Tech: LMS Ecosystem | Learning Analytics Platforms | Collaboration Tools | Content Authoring Tools | Project Management Platforms
+===
+MARITIME TECH :: Product Learning Experience Platform
+Challenge: Users of maritime SaaS products required faster onboarding and workflow mastery to realize value from complex operational systems. Existing training approaches lacked structure and role relevance.
+Solution: Designed and implemented a Product Learning Experience Platform featuring role-based learning journeys, workflow-driven training, performance support resources, onboarding pathways, and self-service learning experiences.
+Impact: Accelerated product onboarding | Improved user proficiency and confidence | Increased product adoption and engagement | Reduced dependency on support teams | Enhanced customer success outcomes
+Tech: Learning Management System | Product Help Center | Video Learning Platform | Articulate Storyline &amp; Rise | Analytics &amp; Reporting Dashboards</textarea>
+    </div>
+
+
+    </div><!-- /panel-scroll -->
+
+    <div class="actions">
+      <button class="btn" id="download">⬇ Download your website</button>
+      <div class="action-row two">
+        <button class="btn ghost sm" id="copy" title="Copy the website HTML">Copy</button>
+        <button class="btn ghost sm" id="toggleCode" title="View / hide code">Code</button>
+      </div>
+      <div class="action-row three">
+        <button class="btn ghost sm" id="template" title="Download a blank template to fill">Template</button>
+        <button class="btn ghost sm" id="export" title="Export your filled data for review / re-import">Export</button>
+        <button class="btn ghost sm" id="import" title="Import a data or template file">Import</button>
+      </div>
+      <input type="file" id="importFile" accept=".txt,.json" style="display:none" />
+    </div>
+  </div>
+
+  <!-- ============ DIVIDER ============ -->
+  <div class="gutter" id="gutter" title="Drag to resize"></div>
+
+  <!-- ============ PREVIEW ============ -->
+  <div class="preview">
+    <div class="bar">
+      <span class="bar-left"><button class="iconbtn" id="togglePanel" title="Hide/show the builder for a full-width preview">☰</button>Live preview</span>
+      <span id="status"></span>
+    </div>
+    <iframe id="frame" title="preview"></iframe>
+    <div class="drawer" id="drawer"><textarea id="code" readonly></textarea></div>
+  </div>
+
+</div>
+
+<script>
+  // ---------- helpers ----------
+  const $ = id => document.getElementById(id);
+  const esc = s => (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const fields = ["name","role","headline","lead","videourl","photo","stats","email","phone","linkedin","resume","accent","about","services","expertise","projects"];
+
+  // Build the final standalone portfolio HTML from the inputs.
+  function buildHTML(){
+    const v = {};
+    fields.forEach(f => v[f] = $(f).value);
+
+    const services = v.services.split("\n").filter(l=>l.trim()).map((l,i)=>{
+      const [t,d] = l.split("::"); 
+      return `<article class="card"><p class="num">${String(i+1).padStart(2,"0")}</p>
+        <h3>${esc((t||"").trim())}</h3><p>${esc((d||"").trim())}</p></article>`;
+    }).join("");
+
+    const projData = v.projects.split("===").map(b=>b.trim()).filter(Boolean).map(block=>{
+      const lines = block.split("\n").map(s=>s.trim()).filter(Boolean);
+      const head = (lines.shift()||"").split("::").map(s=>s.trim());
+      const o = {tag:head[0]||"", title:head[1]||"", link:head[2]||"", challenge:"", solution:"", impact:[], tech:[]};
+      lines.forEach(line=>{
+        const m = line.match(/^(challenge|solution|impact|tech|technologies)\s*:\s*(.*)$/i);
+        if(!m) return;
+        const key = m[1].toLowerCase(), val = m[2].trim();
+        if(key==="challenge") o.challenge = val;
+        else if(key==="solution") o.solution = val;
+        else if(key==="impact") o.impact = val.split("|").map(s=>s.trim()).filter(Boolean);
+        else o.tech = val.split("|").map(s=>s.trim()).filter(Boolean);
+      });
+      return o;
+    });
+    const projJSON = JSON.stringify(projData).replace(/</g,"\\u003c");
+
+    const mkIframe = src => `<iframe src="${esc(src)}" title="Story" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+    let storyEmbed = "";
+    if(v.videourl && v.videourl.trim()){
+      const u = v.videourl.trim();
+      const yt = u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([\w-]{11})/);
+      const vimeo = u.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+      const drive = u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]+)/);
+      const loom = u.match(/loom\.com\/(?:share|embed)\/([\w-]+)/);
+      const isFile = /\.(mp4|webm|ogg|ogv|mov|m4v)(\?.*)?$/i.test(u);
+      if(yt) storyEmbed = mkIframe("https://www.youtube.com/embed/"+yt[1]+"?autoplay=1&rel=0");
+      else if(vimeo) storyEmbed = mkIframe("https://player.vimeo.com/video/"+vimeo[1]+"?autoplay=1");
+      else if(drive) storyEmbed = mkIframe("https://drive.google.com/file/d/"+drive[1]+"/preview");
+      else if(loom) storyEmbed = mkIframe("https://www.loom.com/embed/"+loom[1]);
+      else if(isFile) storyEmbed = `<video src="${esc(u)}" controls autoplay playsinline></video>`;
+      else storyEmbed = mkIframe(u); // generic fallback — works with any embeddable URL
+    }
+    const storyJSON = JSON.stringify(storyEmbed).replace(/</g,"\\u003c");
+
+    const imgSrc = u => {
+      const d = u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]+)/);
+      return d ? "https://drive.google.com/thumbnail?id="+d[1]+"&sz=w1000" : u;
+    };
+    const photo = v.photo && v.photo.trim() ? imgSrc(v.photo.trim()) : "";
+    const resume = (v.resume||"").trim();
+    let resumeHref = resume;
+    const rd = resume.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]+)/);
+    if(rd) resumeHref = "https://drive.google.com/uc?export=download&id="+rd[1];
+    const watchBtn = v.videourl ? `<button class="btn" onclick="openStory()">▶ Watch My Story</button>` : "";
+    const heroPhoto = photo ? `<div class="hero-photo"><img class="portrait" src="${esc(photo)}" alt="${esc(v.name)}">${watchBtn}</div>` : "";
+    const aboutPhoto = photo ? `<div class="about-side"><img class="portrait" src="${esc(photo)}" alt="${esc(v.name)}"><p class="portrait-cap">${esc(v.role)}</p></div>` : "";
+    const stats = v.stats.split("\n").filter(l=>l.trim()).map(l=>{
+      const p = l.split("::");
+      return `<div class="stat"><span class="stat-v">${esc((p[0]||"").trim())}</span><span class="stat-l">${esc((p[1]||"").trim())}</span></div>`;
+    }).join("");
+
+    const projects = projData.map((p,i)=>{
+      const preview = p.challenge || p.solution || "";
+      return `<article class="card proj" onclick="openProject(${i})">
+        <p class="num">${esc(p.tag)}</p><h3>${esc(p.title)}</h3>
+        ${preview?`<p class="cprev">${esc(preview)}</p>`:""}
+        <span class="view-more">View details →</span></article>`;
+    }).join("");
+
+    const expertise = v.expertise.split("\n").filter(l=>l.trim()).map(l=>{
+      const parts = l.split("::");
+      const cat = (parts[0]||"").trim();
+      const pills = (parts[1]||"").split(",").map(s=>s.trim()).filter(Boolean)
+        .map(i=>`<span class="pill">${esc(i)}</span>`).join("");
+      return `<article class="card"><h3>${esc(cat)}</h3><div class="pills">${pills}</div></article>`;
+    }).join("");
+
+    const about = v.about.split(/\n\s*\n/).filter(p=>p.trim())
+      .map(p=>`<p>${esc(p.trim())}</p>`).join("");
+
+    const year = new Date().getFullYear();
+    const nav = `<nav class="nav">
+      <button class="brand" onclick="showPage('home')">${esc(v.name)}</button>
+      <ul class="nav-links">
+        <li><button data-page="home" class="active" onclick="showPage('home')">Home</button></li>
+        <li><button data-page="about" onclick="showPage('about')">About</button></li>
+        <li><button data-page="services" onclick="showPage('services')">What I Do</button></li>
+        <li><button data-page="expertise" onclick="showPage('expertise')">Expertise</button></li>
+        <li><button data-page="work" onclick="showPage('work')">Work</button></li>
+        <li><button data-page="contact" onclick="showPage('contact')">Contact</button></li>
+      </ul></nav>`;
+
+    return `<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>${esc(v.name)}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#F4F2EC;--ink:#18191A;--muted:#6A6A66;--line:#DAD7CD;
+--accent:${v.accent};--accent-ink:${v.accent};--max:1080px}
+*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:"Inter",system-ui,sans-serif;
+font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}
+.wrap{width:100%;max-width:var(--max);margin:0 auto;padding:0 24px}.section{padding:72px 0}
+h1,h2,h3{font-family:"Space Grotesk",system-ui,sans-serif;font-weight:600;line-height:1.1;letter-spacing:-.02em}
+h1{font-size:clamp(2.4rem,6vw,4.2rem)}h2{font-size:clamp(1.6rem,3vw,2.2rem);margin-bottom:18px}
+h3{font-size:1.15rem;margin-bottom:6px}
+.eyebrow{font-family:"Space Grotesk",sans-serif;font-size:.78rem;letter-spacing:.18em;
+text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+.lead{font-size:1.2rem;color:var(--muted);max-width:42ch}
+.site-header{border-bottom:1px solid var(--line);position:sticky;top:0;
+background:var(--paper);z-index:10}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;
+max-width:var(--max);margin:0 auto;flex-wrap:wrap;gap:12px}
+.brand{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:1.15rem;color:var(--ink);
+border:0;background:none;cursor:pointer;letter-spacing:-.01em}
+.nav-links{display:flex;gap:26px;list-style:none}
+.nav-links button{background:none;border:0;cursor:pointer;font:inherit;color:var(--ink);
+font-size:.95rem;padding-bottom:3px;border-bottom:2px solid transparent;white-space:nowrap}
+.nav-links button:hover{color:var(--accent)}
+.nav-links button.active{color:var(--accent);border-bottom-color:var(--accent)}
+.btn{display:inline-block;background:var(--accent);color:#fff;padding:12px 24px;border-radius:999px;
+font-weight:500;font-size:.95rem;border:0;cursor:pointer;font-family:inherit}
+.btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.hero{padding:44px 0 52px}
+.hero h1{margin-bottom:18px;font-size:clamp(1.9rem,3.1vw,2.85rem)}
+.hero-text .eyebrow{margin-bottom:10px}
+.hero-text .lead{font-size:1.08rem}
+.hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:center}
+.hero-grid.no-photo{grid-template-columns:1fr}
+.hero-grid.no-photo h1{max-width:18ch}
+.hero-photo{display:flex;flex-direction:column;align-items:center;gap:20px}
+.portrait{width:100%;max-width:360px;aspect-ratio:1/1;object-fit:cover;border-radius:20px;
+border:1px solid var(--line);background:#fff;box-shadow:0 18px 50px rgba(0,0,0,.10)}
+.stats .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:28px;
+border-top:1px solid var(--line);padding-top:40px}
+.stat-v{font-family:"Space Grotesk",sans-serif;font-size:2.5rem;font-weight:600;color:var(--accent);line-height:1;display:block}
+.stat-l{color:var(--muted);font-size:.95rem;margin-top:8px;display:block}
+.about-grid{display:grid;grid-template-columns:1fr 320px;gap:56px;align-items:start}
+.about-grid.no-photo{grid-template-columns:1fr}
+.about-grid.no-photo .about-text > div{max-width:60ch}
+.about-side{position:sticky;top:100px}
+.about-side .portrait{max-width:100%}
+.portrait-cap{margin-top:14px;color:var(--muted);font-size:.92rem;text-align:center}
+.hero-actions{display:flex;gap:14px;margin-top:24px;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-top:36px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:28px}
+.card .num{font-family:"Space Grotesk",sans-serif;color:var(--accent);font-size:.85rem;letter-spacing:.1em}
+.form{max-width:520px;margin-top:28px;display:grid;gap:16px}
+.field{display:grid;gap:6px}.field label{font-size:.9rem;font-weight:500}
+.field input,.field textarea{font:inherit;padding:12px 14px;border:1px solid var(--line);
+border-radius:10px;background:#fff;color:var(--ink)}
+.site-footer{border-top:1px solid var(--line);padding:36px 0;color:var(--muted);font-size:.9rem}
+.site-footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.contact-list{display:grid;gap:14px;margin-top:28px}
+.contact-list a{font-family:"Space Grotesk",sans-serif;font-size:clamp(1.3rem,3vw,1.7rem);font-weight:500}
+.contact-list .lbl{display:block;font-family:"Inter",sans-serif;font-size:.78rem;letter-spacing:.14em;
+text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.pill{font-size:.85rem;padding:6px 12px;border:1px solid var(--line);border-radius:999px;
+background:var(--paper);color:var(--ink)}
+.card.proj{cursor:pointer;display:flex;flex-direction:column}
+.cprev{color:var(--muted);margin-top:4px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.view-more{color:var(--accent);font-size:.9rem;font-weight:500;margin-top:14px}
+.modal-overlay{position:fixed;inset:0;background:rgba(20,20,20,.55);display:none;
+align-items:center;justify-content:center;padding:20px;z-index:50}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;max-width:660px;width:100%;max-height:86vh;overflow-y:auto;
+border-radius:16px;padding:40px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal h2{font-size:1.9rem;margin:6px 0 0}
+.modal .sec{margin-top:24px}
+.modal .sec h4{font-family:"Space Grotesk",sans-serif;font-size:.78rem;letter-spacing:.14em;
+text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.modal .sec ul{margin:0;padding-left:18px;display:grid;gap:6px}
+.modal-close{position:absolute;top:14px;right:16px;border:0;background:none;font-size:1.9rem;
+cursor:pointer;color:var(--muted);line-height:1}
+.modal-close:hover{color:var(--ink)}
+.video-wrap{position:relative;width:100%;max-width:900px}
+.video-body{position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:14px;overflow:hidden}
+.video-body iframe,.video-body video{position:absolute;inset:0;width:100%;height:100%;border:0}
+.video-overlay .modal-close{top:-40px;right:0;color:#fff;font-size:2.2rem}
+.page{display:none}.page.active{display:block}
+@media(max-width:760px){
+  .hero-grid,.about-grid{grid-template-columns:1fr;gap:32px}
+  .hero-photo{order:-1}
+  .portrait{max-width:260px}
+  .about-side{position:static}
+}
+@media(max-width:600px){
+  .nav{justify-content:center;gap:6px 0}
+  .nav-links{flex-wrap:wrap;justify-content:center;gap:12px 18px;width:100%}
+  .section{padding:56px 0}
+}
+</style></head><body>
+<header class="site-header">${nav}</header>
+<main>
+<section id="home" class="page active">
+  <div class="hero"><div class="wrap hero-grid${photo?'':' no-photo'}">
+    <div class="hero-text">
+      <p class="eyebrow">${esc(v.role)}</p>
+      <h1>${esc(v.headline)}</h1>
+      <p class="lead">${esc(v.lead)}</p>
+      <div class="hero-actions">
+        ${(!photo && watchBtn) ? watchBtn : ""}
+        <button class="btn ${(!photo && watchBtn) ? 'btn-ghost' : ''}" onclick="showPage('work')">See my work</button>
+        ${resume ? `<a class="btn btn-ghost" href="${esc(resumeHref)}" target="_blank" rel="noopener" download>↓ Download Resume</a>` : ""}
+        <button class="btn btn-ghost" onclick="showPage('contact')">Get in touch</button>
+      </div>
+    </div>
+    ${heroPhoto}
+  </div></div>
+  ${stats ? `<div class="section stats"><div class="wrap"><div class="stat-grid">${stats}</div></div></div>` : ""}
+</section>
+<section id="services" class="page"><div class="section"><div class="wrap">
+  <p class="eyebrow">What I do</p><h1>What I'm good at.</h1>
+  <div class="grid">${services}</div>
+</div></div></section>
+<section id="expertise" class="page"><div class="section"><div class="wrap">
+  <p class="eyebrow">Expertise</p><h1>Areas of expertise.</h1>
+  <p class="lead" style="margin-top:22px;">Focus on executive competencies.</p>
+  <div class="grid">${expertise}</div>
+</div></div></section>
+<section id="about" class="page"><div class="section"><div class="wrap about-grid${photo?'':' no-photo'}">
+  <div class="about-text">
+    <p class="eyebrow">About</p><h1>Hi, I'm ${esc(v.name.split(" ")[0])}.</h1>
+    <div style="margin-top:28px;display:grid;gap:18px;">${about}</div>
+  </div>
+  ${aboutPhoto}
+</div></div></section>
+<section id="work" class="page"><div class="section"><div class="wrap">
+  <p class="eyebrow">Selected work</p><h1>A few recent projects.</h1>
+  <div class="grid">${projects}</div></div></div></section>
+<section id="contact" class="page"><div class="section"><div class="wrap">
+  <p class="eyebrow">Contact</p><h1>Let's talk.</h1>
+  <p class="lead" style="margin-top:22px;">The best ways to reach me.</p>
+  <div class="contact-list">
+    <div><span class="lbl">Email</span><a href="mailto:${esc(v.email)}">${esc(v.email)}</a></div>
+    ${v.phone ? `<div><span class="lbl">Phone</span><a href="tel:${esc(v.phone.replace(/[^0-9+]/g,''))}">${esc(v.phone)}</a></div>` : ""}
+    ${v.linkedin ? `<div><span class="lbl">LinkedIn</span><a href="${esc(v.linkedin)}" target="_blank" rel="noopener">${esc(v.linkedin.replace(/^https?:\/\//,''))}</a></div>` : ""}
+  </div>
+</div></div></section>
+</main>
+<footer class="site-footer"><div class="wrap"><span>© ${year} ${esc(v.name)}</span><span>${esc(v.email)}</span></div></footer>
+<div class="modal-overlay" id="projModal" onclick="if(event.target===this)closeProject()">
+  <div class="modal"><button class="modal-close" onclick="closeProject()" aria-label="Close">&times;</button>
+  <div id="projBody"></div></div>
+</div>
+<div class="modal-overlay video-overlay" id="storyModal" onclick="if(event.target===this)closeStory()">
+  <div class="video-wrap"><button class="modal-close" onclick="closeStory()" aria-label="Close">&times;</button>
+  <div id="storyBody" class="video-body"></div></div>
+</div>
+<script>
+var PROJECTS = ${projJSON};
+var STORY = ${storyJSON};
+function esc2(s){return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function openProject(i){
+  var p=PROJECTS[i]; if(!p) return;
+  var h='<p class="eyebrow">'+esc2(p.tag)+'</p><h2>'+esc2(p.title)+'</h2>';
+  if(p.challenge) h+='<div class="sec"><h4>Challenge</h4><p>'+esc2(p.challenge)+'</p></div>';
+  if(p.solution) h+='<div class="sec"><h4>Solution</h4><p>'+esc2(p.solution)+'</p></div>';
+  if(p.impact&&p.impact.length) h+='<div class="sec"><h4>Impact</h4><ul>'+p.impact.map(function(x){return '<li>'+esc2(x)+'</li>';}).join('')+'</ul></div>';
+  if(p.tech&&p.tech.length) h+='<div class="sec"><h4>Technologies Used</h4><div class="pills">'+p.tech.map(function(x){return '<span class="pill">'+esc2(x)+'</span>';}).join('')+'</div></div>';
+  if(p.link) h+='<div class="sec"><a href="'+esc2(p.link)+'" target="_blank" rel="noopener">Visit project →</a></div>';
+  document.getElementById('projBody').innerHTML=h;
+  document.getElementById('projModal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeProject(){
+  document.getElementById('projModal').classList.remove('open');
+  document.body.style.overflow='';
+}
+function openStory(){
+  document.getElementById('storyBody').innerHTML=STORY;
+  document.getElementById('storyModal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeStory(){
+  document.getElementById('storyBody').innerHTML='';
+  document.getElementById('storyModal').classList.remove('open');
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeProject();closeStory();}});
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-links button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+<\/script></body></html>`;
+  }
+
+  // ---------- live preview ----------
+  function refresh(){
+    const html = buildHTML();
+    $("frame").srcdoc = html;
+    $("code").value = html;
+  }
+  fields.forEach(f => $(f).addEventListener("input", refresh));
+
+  // ---------- download ----------
+  $("download").addEventListener("click", () => {
+    const blob = new Blob([buildHTML()], {type:"text/html"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "index.html";
+    document.body.appendChild(a); a.click(); a.remove();
+    $("status").textContent = "downloaded ✓";
+    setTimeout(()=>$("status").textContent="",2000);
+  });
+
+  // ---------- copy ----------
+  $("copy").addEventListener("click", async () => {
+    try{ await navigator.clipboard.writeText(buildHTML());
+      $("status").textContent="copied ✓"; }
+    catch(e){ $("drawer").classList.add("open"); $("code").select();
+      $("status").textContent="select & copy below"; }
+    setTimeout(()=>$("status").textContent="",2000);
+  });
+
+  // ---------- show code ----------
+  $("toggleCode").addEventListener("click", () => $("drawer").classList.toggle("open"));
+
+  // ---------- data template (download / import) ----------
+  // Maps the [[LABEL]] used in the template file to each field id.
+  const TPL = [["NAME","name"],["ROLE","role"],["HEADLINE","headline"],["LEAD","lead"],
+    ["VIDEO","videourl"],["PHOTO","photo"],["STATS","stats"],["EMAIL","email"],
+    ["PHONE","phone"],["LINKEDIN","linkedin"],["RESUME","resume"],["ACCENT","accent"],
+    ["ABOUT","about"],["SERVICES","services"],["EXPERTISE","expertise"],["PROJECTS","projects"]];
+
+  function buildTemplate(){
+    let t = "# PORTFOLIO PROFILE — exported data\n"
+          + "# Edit values under each [[FIELD]] heading and import to load this profile.\n"
+          + "# Keep the [[...]] lines. Multi-line values (About, Projects) are fine.\n\n";
+    TPL.forEach(([label,id]) => { t += "[["+label+"]]\n" + ($(id).value||"") + "\n\n"; });
+    return t;
+  }
+
+  function buildBlankTemplate(){
+    let t = "# PORTFOLIO PROFILE TEMPLATE — fill in and import\n"
+          + "# Type each value under its [[FIELD]] heading. Keep the [[...]] lines.\n"
+          + "# Formats:  Services / Stats lines use  ::  (e.g.  Title :: description).\n"
+          + "#           Expertise:  Category :: item, item, item\n"
+          + "#           Projects:  blocks separated by a line with  ===\n"
+          + "#             Challenge:  /  Solution:  /  Impact: a | b | c  /  Tech: a | b | c\n\n";
+    TPL.forEach(([label,id]) => { t += "[["+label+"]]\n" + (id==="accent" ? "#2C6E49" : "") + "\n\n"; });
+    return t;
+  }
+
+  function parseTemplate(text){
+    const map = {}; TPL.forEach(([label,id]) => map[label]=id);
+    const lines = text.split(/\r?\n/);
+    const buf = {}; let cur = null;
+    for(const line of lines){
+      const m = line.match(/^\s*\[\[([A-Z]+)\]\]\s*$/);
+      if(m){ cur = map[m[1]] || null; if(cur) buf[cur] = []; continue; }
+      if(cur === null) continue;        // ignore preamble / comments
+      buf[cur].push(line);
+    }
+    const out = {};
+    for(const k in buf) out[k] = buf[k].join("\n").replace(/^\s+|\s+$/g,"");
+    return out;
+  }
+
+  function applyData(obj){
+    fields.forEach(f => {
+      if(obj[f] === undefined) return;
+      if(f === "accent" && !/^#[0-9a-fA-F]{6}$/.test((obj[f]||"").trim())) return; // keep a valid color
+      $(f).value = obj[f];
+    });
+    refresh();
+  }
+
+  $("template").addEventListener("click", () => {
+    const blob = new Blob([buildBlankTemplate()], {type:"text/plain"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "portfolio-template.txt";
+    document.body.appendChild(a); a.click(); a.remove();
+    $("status").textContent = "template downloaded ✓";
+    setTimeout(()=>$("status").textContent="",2000);
+  });
+
+  $("export").addEventListener("click", () => {
+    const blob = new Blob([buildTemplate()], {type:"text/plain"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "portfolio-data.txt";
+    document.body.appendChild(a); a.click(); a.remove();
+    $("status").textContent = "exported ✓";
+    setTimeout(()=>$("status").textContent="",2000);
+  });
+
+  $("import").addEventListener("click", () => $("importFile").click());
+  $("importFile").addEventListener("change", e => {
+    const file = e.target.files[0]; if(!file) return;
+    const r = new FileReader();
+    r.onload = () => {
+      const txt = String(r.result).trim();
+      try {
+        let obj;
+        if(txt.startsWith("[")){
+          alert("This file has multiple profiles. Bulk export isn't enabled yet — import one profile at a time, or ask to turn on batch mode.");
+          return;
+        } else if(txt.startsWith("{")){
+          obj = JSON.parse(txt);
+        } else {
+          obj = parseTemplate(txt);
+        }
+        applyData(obj);
+        $("status").textContent = "imported ✓";
+        setTimeout(()=>$("status").textContent="",2000);
+      } catch(err){
+        alert("Couldn't read that file. Use a template downloaded from this tool (.txt), keeping the [[FIELD]] headings intact.");
+      }
+    };
+    r.readAsText(file);
+    e.target.value = ""; // allow re-importing the same file
+  });
+
+  // ---------- view modes (burger = preview only, expand = editor only) ----------
+  const app = $("app");
+  let mode = "split";
+  function setMode(m){
+    mode = m;
+    app.classList.toggle("preview-only", m === "preview");
+    app.classList.toggle("editor-only", m === "editor");
+  }
+  $("togglePanel").addEventListener("click", () => setMode(mode === "preview" ? "split" : "preview"));
+  $("togglePreview").addEventListener("click", () => setMode(mode === "editor" ? "split" : "editor"));
+
+  // ---------- draggable divider ----------
+  const gutter = $("gutter");
+  let dragging = false;
+  gutter.addEventListener("pointerdown", e => {
+    if(mode !== "split") return;
+    dragging = true; gutter.classList.add("drag");
+    gutter.setPointerCapture(e.pointerId);   // keeps events flowing even over the preview iframe
+    e.preventDefault();
+  });
+  gutter.addEventListener("pointermove", e => {
+    if(!dragging) return;
+    const w = Math.min(Math.max(e.clientX, 300), window.innerWidth - 360);
+    app.style.setProperty("--panel-w", w + "px");
+  });
+  function endDrag(){ if(dragging){ dragging = false; gutter.classList.remove("drag"); } }
+  gutter.addEventListener("pointerup", endDrag);
+  gutter.addEventListener("pointercancel", endDrag);
+
+  refresh(); // initial render
+</script>
+</body>
+</html>
