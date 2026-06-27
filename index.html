@@ -3,32 +3,73 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Portfolio Builder</title>
+<title>DAMSAN Portfolio Studio</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#18191A;background:#fff}
-  .app{display:grid;grid-template-columns:var(--panel-w,380px) 7px 1fr;height:100vh;min-height:600px}
+  .app{display:grid;grid-template-columns:380px 1fr;height:100vh;min-height:600px}
   .app.preview-only{grid-template-columns:1fr}
   .app.editor-only{grid-template-columns:1fr}
-  .app.preview-only .panel,.app.preview-only .gutter{display:none}
-  .app.editor-only .preview,.app.editor-only .gutter{display:none}
-  /* draggable divider */
-  .gutter{background:#e6e3db;cursor:col-resize;position:relative;transition:background .15s}
-  .gutter:hover,.gutter.drag{background:#2C6E49}
-  .gutter::after{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-    width:2px;height:28px;border-radius:2px;background:#b9b5aa}
-  .gutter:hover::after,.gutter.drag::after{background:#fff}
+  .app.preview-only .panel{display:none}
+  .app.editor-only .preview{display:none}
   /* view-mode icon buttons */
   .iconbtn{font:inherit;font-size:1rem;line-height:1;width:30px;height:28px;border-radius:7px;
     border:1px solid #d8d5cd;background:#fff;color:#333;cursor:pointer;display:inline-flex;
     align-items:center;justify-content:center;padding:0}
   .iconbtn:hover{background:#2C6E49;color:#fff;border-color:#2C6E49}
-  .panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:16px}
+  .panel-head{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:68px;
+    padding:14px 20px 14px 14px;background:#FAF9F6;border-bottom:1px solid #e6e3db;box-shadow:0 8px 18px rgba(0,0,0,.06)}
+  .head-icons{display:flex;gap:3px;flex:0 0 auto;align-items:center}
+  .ic{position:relative;display:flex}
+  .ic-l{position:absolute;top:calc(100% + 3px);left:50%;transform:translateX(-50%);
+    font-size:.48rem;color:#8a8a86;line-height:1;white-space:nowrap;letter-spacing:0;pointer-events:none}
+  .iconbtn:disabled{opacity:.38;cursor:default}
+  .iconbtn:disabled:hover{background:#fff;color:#333;border-color:#d8d5cd}
+  .link-btn{background:none;border:0;color:#2C6E49;cursor:pointer;font:inherit;font-size:inherit;text-decoration:underline;padding:0;margin-left:4px}
+  .brand{display:flex;align-items:center;gap:6px;min-width:0}
+  .brand-logo{height:40px;width:auto;flex:0 0 auto;object-fit:contain;display:block}
   .bar-left{display:flex;align-items:center;gap:10px}
+  /* ---- help overlay ---- */
+  .help-overlay{position:fixed;inset:0;background:rgba(20,20,20,.5);display:none;
+    align-items:center;justify-content:center;padding:18px;z-index:100}
+  .help-overlay.open{display:flex}
+  .help-modal{background:#fff;max-width:700px;width:100%;max-height:90vh;overflow-y:auto;
+    border-radius:14px;padding:30px 34px 34px;position:relative;box-shadow:0 24px 70px rgba(0,0,0,.32)}
+  .help-close{position:absolute;top:12px;right:14px;border:0;background:none;font-size:1.9rem;
+    cursor:pointer;color:#6A6A66;line-height:1}
+  .help-close:hover{color:#18191A}
+  .help-modal h2{font-size:1.45rem;margin-bottom:4px;color:#18191A}
+  .help-modal .lead2{font-size:.9rem;color:#6A6A66;margin-bottom:6px}
+  .help-modal h3{font-size:.82rem;margin:24px 0 10px;color:#2C6E49;text-transform:uppercase;
+    letter-spacing:.08em;border-top:1px solid #eceae3;padding-top:18px}
+  .help-modal p{font-size:.9rem;color:#2c2c2c;margin-bottom:8px;line-height:1.6}
+  .help-modal ul{margin:0 0 10px 2px;display:grid;gap:7px;list-style:none}
+  .help-modal li{font-size:.9rem;color:#2c2c2c;line-height:1.55;padding-left:16px;position:relative}
+  .help-modal li::before{content:"";position:absolute;left:0;top:9px;width:6px;height:6px;
+    border-radius:50%;background:#2C6E49}
+  .help-modal b{color:#18191A}
+  .help-modal code{background:#f0eee8;padding:1px 6px;border-radius:5px;font-size:.85em;
+    font-family:ui-monospace,Menlo,Consolas,monospace}
+  .help-modal .step{display:flex;gap:11px;margin-bottom:11px;align-items:flex-start}
+  .help-modal .step .n{flex:0 0 24px;height:24px;border-radius:50%;background:#2C6E49;color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700}
+  .help-modal .step .t{font-size:.9rem;color:#2c2c2c;line-height:1.55;padding-top:1px}
+  .sample-list{display:grid;gap:8px;margin-top:14px}
+  .sample-list button{font:inherit;text-align:left;padding:12px 14px;border:1px solid #d8d5cd;
+    border-radius:9px;background:#fff;cursor:pointer;font-size:.92rem;color:#18191A;font-weight:500}
+  .sample-list button:hover{border-color:#2C6E49;background:#f3f7f4;color:#1B4332}
+  .help-modal .help-vicon{display:inline-flex;width:18px;height:18px;vertical-align:-4px;color:#2C6E49}
+  .help-modal .help-vicon svg{width:18px;height:18px}
+  .video-wrap2{position:relative;width:100%;max-width:900px}
+  .video-body2{position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:14px;overflow:hidden}
+  .video-body2 iframe,.video-body2 video{position:absolute;inset:0;width:100%;height:100%;border:0}
+  #tutorialOverlay .help-close{position:absolute;top:-42px;right:0;color:#fff;font-size:2.2rem}
   /* ---- controls panel ---- */
   .panel{border-right:1px solid #e6e3db;background:#FAF9F6;display:flex;flex-direction:column;overflow:hidden}
   .panel-scroll{flex:1;overflow-y:auto;padding:20px}
-  .panel h1{font-size:1.15rem;margin-bottom:4px}
+  .panel h1{display:flex;flex-direction:column;gap:1px}
+  .brand-kicker{font-size:1.32rem;font-weight:700;letter-spacing:.02em;color:#18191A;line-height:1;white-space:nowrap}
+  .brand-name{font-size:.55rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#2C6E49;line-height:1;margin-top:3px;white-space:nowrap}
   .panel .sub{font-size:.85rem;color:#6A6A66;margin-bottom:18px}
   .group{margin-bottom:18px}
   .group label{display:block;font-size:.8rem;font-weight:600;margin-bottom:5px;color:#333}
@@ -54,8 +95,8 @@
   .note{font-size:.72rem;color:#8a8a86;text-align:center;line-height:1.4}
   /* ---- preview panel ---- */
   .preview{display:flex;flex-direction:column;background:#eceae3}
-  .preview .bar{padding:8px 14px;font-size:.78rem;color:#6A6A66;border-bottom:1px solid #ddd9d0;
-    background:#f4f2ec;display:flex;justify-content:space-between;align-items:center}
+  .preview .bar{min-height:68px;padding:8px 16px;font-size:.78rem;color:#6A6A66;border-bottom:1px solid #e6e3db;
+    background:#f4f2ec;display:flex;justify-content:space-between;align-items:center;box-shadow:0 8px 18px rgba(0,0,0,.06)}
   .preview iframe{flex:1;width:100%;border:0;background:#F4F2EC}
   /* code drawer */
   .drawer{display:none;border-top:1px solid #ddd9d0;background:#1b1d1a}
@@ -64,7 +105,6 @@
     color:#cfe3d4;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.72rem;padding:12px}
   @media(max-width:760px){
     .app,.app.preview-only,.app.editor-only{grid-template-columns:1fr;height:auto}
-    .gutter{display:none}
     .panel{display:block;overflow:visible}
     .panel-scroll{overflow:visible}
     .actions{box-shadow:none}
@@ -77,12 +117,22 @@
 
   <!-- ============ CONTROLS ============ -->
   <div class="panel">
-    <div class="panel-scroll">
     <div class="panel-head">
-      <h1>Portfolio Builder</h1>
-      <button class="iconbtn" id="togglePreview" title="Expand builder to full width (hide preview)">⤢</button>
+      <div class="brand">
+        <img class="brand-logo" src="data:image/png;base64,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" alt="DAMSAN logo" />
+        <h1><span class="brand-kicker">DAMSAN</span><span class="brand-name">Portfolio Studio</span></h1>
+      </div>
+      <div class="head-icons">
+        <div class="ic"><button class="iconbtn" id="help" title="How to use this builder">?</button><span class="ic-l">Help</span></div>
+        <div class="ic"><button class="iconbtn" id="tutorialBtn" title="Watch the tutorial video"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg></button><span class="ic-l">Video</span></div>
+        <div class="ic"><button class="iconbtn" id="defaultBtn" title="Restore the default content"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg></button><span class="ic-l">Default</span></div>
+        <div class="ic"><button class="iconbtn" id="undoBtn" title="Undo the last clear" disabled><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5 5.5 5.5 0 0 1-5.5 5.5H11"/></svg></button><span class="ic-l">Undo</span></div>
+        <div class="ic"><button class="iconbtn" id="clearBtn" title="Clear all fields"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg></button><span class="ic-l">Clear</span></div>
+        <div class="ic"><button class="iconbtn" id="togglePreview" title="Expand builder to full width (hide preview)">⤢</button><span class="ic-l">Expand</span></div>
+      </div>
     </div>
 
+    <div class="panel-scroll">
     <div class="group">
       <label>Your name</label>
       <input type="text" id="name" value="Damodharan Panneerselvam" />
@@ -106,7 +156,7 @@
     </div>
     <div class="group">
       <label>Photo URL</label>
-      <p class="hint">Headshot for the hero &amp; About. Use an online image link, a Google Drive share link, or a local filename like <b>photo.jpg</b> uploaded next to index.html. Blank = text-only.</p>
+      <p class="hint">Headshot for the hero &amp; About. Use an online image link, a Google Drive share link, or a local filename like <b>photo.jpg</b> uploaded next to index.html. If blank or it can't load, your initials are shown.</p>
       <input type="text" id="photo" value="https://ui-avatars.com/api/?name=Damodharan+Panneerselvam&amp;background=2C6E49&amp;color=fff&amp;size=512&amp;bold=true" />
     </div>
     <div class="group">
@@ -177,12 +227,13 @@ Business Impact :: Performance Consulting, User Engagement, Product Utilization,
       <label>Work / projects</label>
       <p class="hint">One project per block, separated by a line with <b>===</b>.<br>
         Line 1:  TAG :: Title :: link (link optional)<br>
-        Then:  Challenge:  /  Solution:  /  Impact: a | b | c  /  Tech: a | b | c</p>
+        Then:  Challenge:  /  Solution:  /  Impact: a | b | c  /  Tech: a | b | c  /  Video: url (optional — adds a video button on the card)</p>
       <textarea id="projects" rows="16">PRODUCT ADOPTION :: Global Product Adoption Framework
 Challenge: Customers were onboarding inconsistently, resulting in slower product adoption and underutilization of key features.
 Solution: Designed a role-based product adoption framework combining onboarding journeys, learning paths, performance support assets, and success milestones.
 Impact: Improved onboarding consistency | Increased feature awareness | Reduced dependency on support teams | Accelerated time-to-value for customers
 Tech: LMS | Knowledge Base | Product Analytics | Articulate Storyline | Walkthrough Tools
+Video: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
 ===
 CUSTOMER EDUCATION :: Customer Learning Academy
 Challenge: Customers lacked a structured approach to learning the platform, leading to repeated support requests and lower engagement.
@@ -232,7 +283,8 @@ Tech: Learning Management System | Product Help Center | Video Learning Platform
 
     <div class="actions">
       <button class="btn" id="download">⬇ Download your website</button>
-      <div class="action-row two">
+      <div class="action-row three">
+        <button class="btn ghost sm" id="sample" title="Load a sample profile">Sample</button>
         <button class="btn ghost sm" id="copy" title="Copy the website HTML">Copy</button>
         <button class="btn ghost sm" id="toggleCode" title="View / hide code">Code</button>
       </div>
@@ -244,9 +296,6 @@ Tech: Learning Management System | Product Help Center | Video Learning Platform
       <input type="file" id="importFile" accept=".txt,.json" style="display:none" />
     </div>
   </div>
-
-  <!-- ============ DIVIDER ============ -->
-  <div class="gutter" id="gutter" title="Drag to resize"></div>
 
   <!-- ============ PREVIEW ============ -->
   <div class="preview">
@@ -260,11 +309,108 @@ Tech: Learning Management System | Product Help Center | Video Learning Platform
 
 </div>
 
+<!-- ============ HELP OVERLAY ============ -->
+<div class="help-overlay" id="helpOverlay">
+  <div class="help-modal">
+    <button class="help-close" id="helpClose" aria-label="Close">&times;</button>
+    <h2>How to use DAMSAN Portfolio Studio</h2>
+    <p class="lead2">Fill the fields on the left — the preview updates live. When it looks right, click <b>Download your website</b> and publish it (steps at the bottom).</p>
+
+    <h3>The fields</h3>
+    <ul>
+      <li><b>Your name / Role &amp; location</b> — shown in the header and the hero line.</li>
+      <li><b>Hero headline / subtext</b> — the big intro on the Home page.</li>
+      <li><b>Story video URL</b> — paste a YouTube, Vimeo, Google Drive, Loom or MP4 link. It adds a <b>Watch My Story</b> button under your photo. Leave blank to hide it.</li>
+      <li><b>Photo URL</b> — an image link, a Google Drive share link, or a local filename like <code>photo.jpg</code> uploaded next to your site. If it's blank or the image can't load, your initials are shown instead (e.g. <b>DP</b>).</li>
+      <li><b>Home stats strip</b> — one per line as <code>Value :: Label</code> (e.g. <code>15+ :: Years of experience</code>).</li>
+      <li><b>Email / Phone / LinkedIn</b> — shown on the Contact page as tappable links.</li>
+      <li><b>Resume / CV link</b> — a local file like <code>resume.pdf</code>, a Drive link, or any URL. Adds a Download Resume button.</li>
+      <li><b>Accent color</b> — the highlight colour for buttons, links and headings.</li>
+      <li><b>About</b> — one paragraph per blank line.</li>
+      <li><b>What I do (services)</b> — one per line as <code>Title :: description</code>.</li>
+      <li><b>Expertise</b> — one group per line as <code>Category :: item, item, item</code>.</li>
+    </ul>
+
+    <h3>Projects (the detailed part)</h3>
+    <p>Each project is a block, and blocks are separated by a line with <code>===</code>. Inside a block:</p>
+    <ul>
+      <li>First line: <code>TAG :: Title :: link</code> (the link is optional).</li>
+      <li><code>Challenge:</code> one or two sentences.</li>
+      <li><code>Solution:</code> one or two sentences.</li>
+      <li><code>Impact:</code> items separated by a pipe — <code>a | b | c</code>.</li>
+      <li><code>Tech:</code> items separated by a pipe — <code>a | b | c</code>.</li>
+      <li><code>Video:</code> a YouTube, Vimeo, Drive, Loom or MP4 link (optional). Adds a video button on the project card that opens a player.</li>
+    </ul>
+    <p>Each project becomes a clickable card; clicking it opens a popup with Challenge → Solution → Impact → Technologies.</p>
+
+    <h3>Videos</h3>
+    <p>There are two ways to add video, and both open a built-in player overlay:</p>
+    <ul>
+      <li><b>Watch My Story</b> — fill the <b>Story video URL</b> field to add a button under your hero photo.</li>
+      <li><b>Project videos</b> — add a <code>Video:</code> line inside any project block. That project's card then shows a small video icon <span class="help-vicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg></span> next to “View details”.</li>
+    </ul>
+    <p><b>To watch:</b> click the video icon (or the Watch My Story button) — a player opens; close it with × or the Esc key. <b>To add a video:</b> paste any YouTube, Vimeo, Google Drive, Loom, or MP4 link. Leave it blank to hide the button.</p>
+
+    <h3>Toolbar &amp; view controls</h3>
+    <p>The icons at the top of the builder are labelled beneath each one:</p>
+    <ul>
+      <li><b>Help</b> (?) — opens this guide.</li>
+      <li><b>Video</b> (▶) — plays a short tutorial on how to use the builder.</li>
+      <li><b>Default</b> (home) — restores the original default content.</li>
+      <li><b>Undo</b> — brings back everything after a Clear (it lights up right after you clear).</li>
+      <li><b>Clear</b> (reset) — empties every field in one click; use <b>Undo</b> beside it to bring it all back.</li>
+      <li><b>Expand</b> (⤢) — makes the builder fill the screen, hiding the preview, for easier typing.</li>
+      <li><b>Hide</b> (☰, in the preview bar) — hides the builder for a full-width preview of your site.</li>
+    </ul>
+
+    <h3>Sample profiles</h3>
+    <p>Click <b>Sample</b> to load a ready-made profile for a learning role — Instructional Designer, eLearning Developer, Motion Graphics Designer, LMS Administrator, Learning Experience Designer, Learning Experience Producer, AI Learning Technology Specialist, or Head of Learning Experience Centre. Each fills every field with realistic content you can customise. It replaces your current fields, so use <b>Export</b> first if you want to keep them.</p>
+
+    <h3>Save &amp; reuse your work</h3>
+    <ul>
+      <li><b>Export</b> — saves your filled fields to a file, for review, sharing, or backup.</li>
+      <li><b>Import</b> — loads a saved file and refills every field instantly, so you never retype.</li>
+      <li><b>Template</b> — a blank file to hand to other people to fill in.</li>
+      <li><b>Copy / Code</b> — copy the website's HTML, or view it.</li>
+    </ul>
+
+    <h3>Publish on GitHub (free hosting)</h3>
+    <div class="step"><span class="n">1</span><span class="t">Click <b>Download your website</b> to save your <code>index.html</code>. Also keep any local files you referenced (like <code>photo.jpg</code> or <code>resume.pdf</code>) in the same folder.</span></div>
+    <div class="step"><span class="n">2</span><span class="t">Create a free account at <b>github.com</b>.</span></div>
+    <div class="step"><span class="n">3</span><span class="t">Click the <b>+</b> at the top right → <b>New repository</b>. Give it a name (e.g. <code>my-portfolio</code>), set it to <b>Public</b>, and click <b>Create repository</b>.</span></div>
+    <div class="step"><span class="n">4</span><span class="t">On the new repo page, click <b>uploading an existing file</b>. Drag in your <code>index.html</code> and any photo/resume files together, then click <b>Commit changes</b>.</span></div>
+    <div class="step"><span class="n">5</span><span class="t">Open <b>Settings → Pages</b>. Under <b>Branch</b>, choose <code>main</code> and <code>/ (root)</code>, then <b>Save</b>.</span></div>
+    <div class="step"><span class="n">6</span><span class="t">Wait 1–2 minutes. Your live site appears at <code>https://your-username.github.io/my-portfolio/</code>.</span></div>
+    <div class="step"><span class="n">7</span><span class="t">To update later: change your fields here, download again, and re-upload <code>index.html</code> to the repo (replace the old one). The live site refreshes automatically.</span></div>
+    <p style="margin-top:14px;color:#6A6A66;font-size:.85rem;">Tip: before downloading, use <b>Export</b> to save your data — next time, <b>Import</b> it to pick up exactly where you left off.</p>
+  </div>
+</div>
+
+<!-- ============ SAMPLE PICKER ============ -->
+<div class="help-overlay" id="sampleOverlay">
+  <div class="help-modal" style="max-width:520px">
+    <button class="help-close" id="sampleClose" aria-label="Close">&times;</button>
+    <h2>Load a sample profile</h2>
+    <p class="lead2">Pick a role to fill the builder with a ready-made example you can customise. This replaces your current fields — use <b>Export</b> first if you want to keep them.</p>
+    <div class="sample-list" id="sampleList"></div>
+  </div>
+</div>
+
+<!-- ============ TUTORIAL VIDEO ============ -->
+<div class="help-overlay" id="tutorialOverlay">
+  <div class="video-wrap2">
+    <button class="help-close" id="tutorialClose" aria-label="Close">&times;</button>
+    <div class="video-body2" id="tutorialBody"></div>
+  </div>
+</div>
+
 <script>
   // ---------- helpers ----------
   const $ = id => document.getElementById(id);
   const esc = s => (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   const fields = ["name","role","headline","lead","videourl","photo","stats","email","phone","linkedin","resume","accent","about","services","expertise","projects"];
+  const DEFAULTS = {};
+  fields.forEach(f => DEFAULTS[f] = $(f).value);
 
   // Build the final standalone portfolio HTML from the inputs.
   function buildHTML(){
@@ -277,39 +423,42 @@ Tech: Learning Management System | Product Help Center | Video Learning Platform
         <h3>${esc((t||"").trim())}</h3><p>${esc((d||"").trim())}</p></article>`;
     }).join("");
 
-    const projData = v.projects.split("===").map(b=>b.trim()).filter(Boolean).map(block=>{
-      const lines = block.split("\n").map(s=>s.trim()).filter(Boolean);
-      const head = (lines.shift()||"").split("::").map(s=>s.trim());
-      const o = {tag:head[0]||"", title:head[1]||"", link:head[2]||"", challenge:"", solution:"", impact:[], tech:[]};
-      lines.forEach(line=>{
-        const m = line.match(/^(challenge|solution|impact|tech|technologies)\s*:\s*(.*)$/i);
-        if(!m) return;
-        const key = m[1].toLowerCase(), val = m[2].trim();
-        if(key==="challenge") o.challenge = val;
-        else if(key==="solution") o.solution = val;
-        else if(key==="impact") o.impact = val.split("|").map(s=>s.trim()).filter(Boolean);
-        else o.tech = val.split("|").map(s=>s.trim()).filter(Boolean);
-      });
-      return o;
-    });
-    const projJSON = JSON.stringify(projData).replace(/</g,"\\u003c");
-
-    const mkIframe = src => `<iframe src="${esc(src)}" title="Story" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
-    let storyEmbed = "";
-    if(v.videourl && v.videourl.trim()){
-      const u = v.videourl.trim();
+    const videoEmbed = (raw) => {
+      const u = (raw||"").trim();
+      if(!u) return "";
+      const mkI = src => `<iframe src="${esc(src)}" title="Video" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
       const yt = u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([\w-]{11})/);
       const vimeo = u.match(/vimeo\.com\/(?:video\/)?(\d+)/);
       const drive = u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]+)/);
       const loom = u.match(/loom\.com\/(?:share|embed)\/([\w-]+)/);
       const isFile = /\.(mp4|webm|ogg|ogv|mov|m4v)(\?.*)?$/i.test(u);
-      if(yt) storyEmbed = mkIframe("https://www.youtube.com/embed/"+yt[1]+"?autoplay=1&rel=0");
-      else if(vimeo) storyEmbed = mkIframe("https://player.vimeo.com/video/"+vimeo[1]+"?autoplay=1");
-      else if(drive) storyEmbed = mkIframe("https://drive.google.com/file/d/"+drive[1]+"/preview");
-      else if(loom) storyEmbed = mkIframe("https://www.loom.com/embed/"+loom[1]);
-      else if(isFile) storyEmbed = `<video src="${esc(u)}" controls autoplay playsinline></video>`;
-      else storyEmbed = mkIframe(u); // generic fallback — works with any embeddable URL
-    }
+      if(yt) return mkI("https://www.youtube.com/embed/"+yt[1]+"?autoplay=1&rel=0");
+      if(vimeo) return mkI("https://player.vimeo.com/video/"+vimeo[1]+"?autoplay=1");
+      if(drive) return mkI("https://drive.google.com/file/d/"+drive[1]+"/preview");
+      if(loom) return mkI("https://www.loom.com/embed/"+loom[1]);
+      if(isFile) return `<video src="${esc(u)}" controls autoplay playsinline></video>`;
+      return mkI(u);
+    };
+
+    const projData = v.projects.split("===").map(b=>b.trim()).filter(Boolean).map(block=>{
+      const lines = block.split("\n").map(s=>s.trim()).filter(Boolean);
+      const head = (lines.shift()||"").split("::").map(s=>s.trim());
+      const o = {tag:head[0]||"", title:head[1]||"", link:head[2]||"", challenge:"", solution:"", impact:[], tech:[], video:""};
+      lines.forEach(line=>{
+        const m = line.match(/^(challenge|solution|impact|tech|technologies|video|videourl|videolink)\s*:\s*(.*)$/i);
+        if(!m) return;
+        const key = m[1].toLowerCase(), val = m[2].trim();
+        if(key==="challenge") o.challenge = val;
+        else if(key==="solution") o.solution = val;
+        else if(key==="impact") o.impact = val.split("|").map(s=>s.trim()).filter(Boolean);
+        else if(key==="tech"||key==="technologies") o.tech = val.split("|").map(s=>s.trim()).filter(Boolean);
+        else o.video = videoEmbed(val);
+      });
+      return o;
+    });
+    const projJSON = JSON.stringify(projData).replace(/</g,"\\u003c");
+
+    const storyEmbed = videoEmbed(v.videourl);
     const storyJSON = JSON.stringify(storyEmbed).replace(/</g,"\\u003c");
 
     const imgSrc = u => {
@@ -322,8 +471,12 @@ Tech: Learning Management System | Product Help Center | Video Learning Platform
     const rd = resume.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]+)/);
     if(rd) resumeHref = "https://drive.google.com/uc?export=download&id="+rd[1];
     const watchBtn = v.videourl ? `<button class="btn" onclick="openStory()">▶ Watch My Story</button>` : "";
-    const heroPhoto = photo ? `<div class="hero-photo"><img class="portrait" src="${esc(photo)}" alt="${esc(v.name)}">${watchBtn}</div>` : "";
-    const aboutPhoto = photo ? `<div class="about-side"><img class="portrait" src="${esc(photo)}" alt="${esc(v.name)}"><p class="portrait-cap">${esc(v.role)}</p></div>` : "";
+    const initials = ((v.name||"").trim().split(/\s+/).filter(Boolean).map(w=>w[0]).slice(0,2).join("") || "?").toUpperCase();
+    const initialsAvatar = `<div class="portrait portrait-initials" role="img" aria-label="${esc(v.name)}">${esc(initials)}</div>`;
+    const heroImg = photo ? `<img class="portrait" src="${esc(photo)}" alt="${esc(v.name)}" data-initials="${esc(initials)}" onerror="imgFail(this)">` : initialsAvatar;
+    const aboutImg = photo ? `<img class="portrait" src="${esc(photo)}" alt="${esc(v.name)}" data-initials="${esc(initials)}" onerror="imgFail(this)">` : initialsAvatar;
+    const heroPhoto = `<div class="hero-photo">${heroImg}${watchBtn}</div>`;
+    const aboutPhoto = `<div class="about-side">${aboutImg}<p class="portrait-cap">${esc(v.role)}</p></div>`;
     const stats = v.stats.split("\n").filter(l=>l.trim()).map(l=>{
       const p = l.split("::");
       return `<div class="stat"><span class="stat-v">${esc((p[0]||"").trim())}</span><span class="stat-l">${esc((p[1]||"").trim())}</span></div>`;
@@ -331,10 +484,11 @@ Tech: Learning Management System | Product Help Center | Video Learning Platform
 
     const projects = projData.map((p,i)=>{
       const preview = p.challenge || p.solution || "";
+      const vbtn = p.video ? `<button class="proj-video" onclick="event.stopPropagation();openProjectVideo(${i})" aria-label="Watch video" title="Watch video"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg></button>` : "";
       return `<article class="card proj" onclick="openProject(${i})">
         <p class="num">${esc(p.tag)}</p><h3>${esc(p.title)}</h3>
         ${preview?`<p class="cprev">${esc(preview)}</p>`:""}
-        <span class="view-more">View details →</span></article>`;
+        <div class="proj-foot"><span class="view-more">View details →</span>${vbtn}</div></article>`;
     }).join("");
 
     const expertise = v.expertise.split("\n").filter(l=>l.trim()).map(l=>{
@@ -404,6 +558,9 @@ font-weight:500;font-size:.95rem;border:0;cursor:pointer;font-family:inherit}
 .hero-photo{display:flex;flex-direction:column;align-items:center;gap:20px}
 .portrait{width:100%;max-width:360px;aspect-ratio:1/1;object-fit:cover;border-radius:20px;
 border:1px solid var(--line);background:#fff;box-shadow:0 18px 50px rgba(0,0,0,.10)}
+.portrait-initials{display:flex;align-items:center;justify-content:center;background:var(--accent);
+color:#fff;font-family:"Space Grotesk",system-ui,sans-serif;font-weight:600;
+font-size:clamp(3rem,9vw,5.5rem);letter-spacing:.02em;border-color:transparent}
 .stats .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:28px;
 border-top:1px solid var(--line);padding-top:40px}
 .stat-v{font-family:"Space Grotesk",sans-serif;font-size:2.5rem;font-weight:600;color:var(--accent);line-height:1;display:block}
@@ -433,7 +590,12 @@ text-transform:uppercase;color:var(--muted);margin-bottom:2px}
 background:var(--paper);color:var(--ink)}
 .card.proj{cursor:pointer;display:flex;flex-direction:column}
 .cprev{color:var(--muted);margin-top:4px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.view-more{color:var(--accent);font-size:.9rem;font-weight:500;margin-top:14px}
+.view-more{color:var(--accent);font-size:.9rem;font-weight:500}
+.proj-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:14px}
+.proj-video{flex:0 0 auto;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);
+background:#fff;color:var(--accent);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}
+.proj-video:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.proj-video svg{width:18px;height:18px}
 .modal-overlay{position:fixed;inset:0;background:rgba(20,20,20,.55);display:none;
 align-items:center;justify-content:center;padding:20px;z-index:50}
 .modal-overlay.open{display:flex}
@@ -463,18 +625,19 @@ cursor:pointer;color:var(--muted);line-height:1}
   .nav-links{flex-wrap:wrap;justify-content:center;gap:12px 18px;width:100%}
   .section{padding:56px 0}
 }
-</style></head><body>
+</style>
+<script>function imgFail(img){var div=document.createElement('div');div.className='portrait portrait-initials';div.setAttribute('role','img');div.setAttribute('aria-label',img.alt||'');div.textContent=img.getAttribute('data-initials')||'?';if(img.parentNode)img.parentNode.replaceChild(div,img);}<\/script>
+</head><body>
 <header class="site-header">${nav}</header>
 <main>
 <section id="home" class="page active">
-  <div class="hero"><div class="wrap hero-grid${photo?'':' no-photo'}">
+  <div class="hero"><div class="wrap hero-grid">
     <div class="hero-text">
       <p class="eyebrow">${esc(v.role)}</p>
       <h1>${esc(v.headline)}</h1>
       <p class="lead">${esc(v.lead)}</p>
       <div class="hero-actions">
-        ${(!photo && watchBtn) ? watchBtn : ""}
-        <button class="btn ${(!photo && watchBtn) ? 'btn-ghost' : ''}" onclick="showPage('work')">See my work</button>
+        <button class="btn" onclick="showPage('work')">See my work</button>
         ${resume ? `<a class="btn btn-ghost" href="${esc(resumeHref)}" target="_blank" rel="noopener" download>↓ Download Resume</a>` : ""}
         <button class="btn btn-ghost" onclick="showPage('contact')">Get in touch</button>
       </div>
@@ -492,7 +655,7 @@ cursor:pointer;color:var(--muted);line-height:1}
   <p class="lead" style="margin-top:22px;">Focus on executive competencies.</p>
   <div class="grid">${expertise}</div>
 </div></div></section>
-<section id="about" class="page"><div class="section"><div class="wrap about-grid${photo?'':' no-photo'}">
+<section id="about" class="page"><div class="section"><div class="wrap about-grid">
   <div class="about-text">
     <p class="eyebrow">About</p><h1>Hi, I'm ${esc(v.name.split(" ")[0])}.</h1>
     <div style="margin-top:28px;display:grid;gap:18px;">${about}</div>
@@ -543,6 +706,12 @@ function closeProject(){
 }
 function openStory(){
   document.getElementById('storyBody').innerHTML=STORY;
+  document.getElementById('storyModal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function openProjectVideo(i){
+  var p=PROJECTS[i]; if(!p||!p.video) return;
+  document.getElementById('storyBody').innerHTML=p.video;
   document.getElementById('storyModal').classList.add('open');
   document.body.style.overflow='hidden';
 }
@@ -689,6 +858,12 @@ function showPage(id){
     e.target.value = ""; // allow re-importing the same file
   });
 
+  // ---------- help overlay ----------
+  $("help").addEventListener("click", () => $("helpOverlay").classList.add("open"));
+  $("helpClose").addEventListener("click", () => $("helpOverlay").classList.remove("open"));
+  $("helpOverlay").addEventListener("click", e => { if(e.target === $("helpOverlay")) $("helpOverlay").classList.remove("open"); });
+  document.addEventListener("keydown", e => { if(e.key === "Escape"){ $("helpOverlay").classList.remove("open"); $("sampleOverlay").classList.remove("open"); closeTutorial(); } });
+
   // ---------- view modes (burger = preview only, expand = editor only) ----------
   const app = $("app");
   let mode = "split";
@@ -700,23 +875,409 @@ function showPage(id){
   $("togglePanel").addEventListener("click", () => setMode(mode === "preview" ? "split" : "preview"));
   $("togglePreview").addEventListener("click", () => setMode(mode === "editor" ? "split" : "editor"));
 
-  // ---------- draggable divider ----------
-  const gutter = $("gutter");
-  let dragging = false;
-  gutter.addEventListener("pointerdown", e => {
-    if(mode !== "split") return;
-    dragging = true; gutter.classList.add("drag");
-    gutter.setPointerCapture(e.pointerId);   // keeps events flowing even over the preview iframe
-    e.preventDefault();
+  // ---------- sample profiles ----------
+  const av = (n,bg) => "https://ui-avatars.com/api/?name=" + n.replace(/ /g,"+") + "&background=" + bg + "&color=fff&size=512&bold=true";
+  const SAMPLES = {
+    instructional:{label:"Instructional Designer", data:{
+      name:`Aarti Sharma`, role:`Instructional Designer · Chennai, India`,
+      headline:`Turning complex content into learning that sticks.`,
+      lead:`Instructional designer with 8+ years building learner-centred courses, scenarios, and blended programs that move people from knowing to doing.`,
+      videourl:``, photo:av("Aarti Sharma","2C6E49"),
+      stats:`8+ :: Years in learning design
+120+ :: Courses shipped
+5 :: Industries served`,
+      email:`your-email@domain.com`, phone:`+91 XXXXX XXXXX`, linkedin:`https://linkedin.com/in/your-profile`,
+      resume:`resume.pdf`, accent:`#2C6E49`,
+      about:`I transform dense source material and subject-matter expertise into clear, engaging learning experiences. My work spans needs analysis, storyboarding, assessment design, and evaluation.
+
+I design for real performance goals, not just information transfer — using scenarios, practice, and feedback so learning actually changes behaviour on the job.`,
+      services:`Needs Analysis :: Identify performance gaps and define measurable learning objectives.
+Storyboarding :: Translate content into structured, learner-centred course blueprints.
+Assessment Design :: Build knowledge checks, scenarios, and performance assessments.
+Blended Programs :: Combine self-paced, virtual, and on-the-job learning into cohesive journeys.`,
+      expertise:`Design Methods :: ADDIE, SAM, Bloom's Taxonomy, Scenario-Based Learning
+Authoring Tools :: Articulate Storyline, Rise, Camtasia, Figma
+Evaluation :: Kirkpatrick Model, Assessment Strategy, Learning Analytics`,
+      projects:`ONBOARDING :: Sales Onboarding Curriculum
+Challenge: New hires took months to reach productivity with fragmented, lecture-heavy training.
+Solution: Designed a scenario-based blended onboarding journey with role-plays, simulations, and milestone checks.
+Impact: Faster time-to-productivity | Higher retention | Consistent onboarding across regions
+Tech: Articulate Storyline | Rise | LMS | Camtasia
+Video: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
+===
+COMPLIANCE :: Compliance Made Human
+Challenge: Annual compliance training had low completion and poor recall.
+Solution: Rebuilt dry policy content into short, story-driven decision scenarios.
+Impact: Higher completion | Better policy recall | Fewer support questions
+Tech: Rise | Vyond | Assessment Design
+Video: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
+===
+LEADERSHIP :: Leadership Essentials Program
+Challenge: Managers needed practical skills a single workshop could not build.
+Solution: Created a blended program of e-learning, virtual practice, and on-the-job assignments.
+Impact: Sustained behaviour change | Improved manager readiness | Stronger on-the-job application
+Tech: Storyline | Virtual Classroom | Job Aids | LMS
+Video: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`
+    }},
+    elearning:{label:"eLearning Developer", data:{
+      name:`Rohan Mehta`, role:`eLearning Developer · Bengaluru, India`,
+      headline:`Building interactive e-learning that runs flawlessly everywhere.`,
+      lead:`E-learning developer specialising in interactive, accessible SCORM and xAPI courses built in Storyline, Rise, and custom HTML5.`,
+      videourl:``, photo:av("Rohan Mehta","2563EB"),
+      stats:`9+ :: Years developing
+200+ :: Modules built
+WCAG :: Accessible by default`,
+      email:`your-email@domain.com`, phone:`+91 XXXXX XXXXX`, linkedin:`https://linkedin.com/in/your-profile`,
+      resume:`resume.pdf`, accent:`#2563EB`,
+      about:`I build the interactive courses instructional designers imagine — clean, responsive, and reliable across browsers and devices. I specialise in Articulate, Captivate, and custom HTML5 interactions.
+
+I care about the details that make e-learning feel effortless: smooth interactions, accessibility, SCORM and xAPI tracking, and performance that holds up on any LMS.`,
+      services:`Course Development :: Build interactive modules in Storyline, Rise, and Captivate.
+Custom Interactions :: Develop advanced HTML5, JavaScript, and triggers for rich learning.
+SCORM / xAPI :: Package and troubleshoot tracking across any LMS.
+Accessibility :: Deliver WCAG-compliant, screen-reader-friendly courses.`,
+      expertise:`Authoring :: Articulate Storyline, Rise, Adobe Captivate, Lectora
+Development :: HTML5, CSS, JavaScript, SCORM, xAPI
+Quality :: Accessibility (WCAG), Cross-browser QA, LMS Testing`,
+      projects:`INTERACTIVE :: Interactive Product Simulation
+Challenge: Learners needed safe, hands-on practice with a complex software workflow.
+Solution: Built a branching software simulation with guided, try, and test modes in Storyline.
+Impact: Confident first-time use | Fewer support tickets | Reusable simulation framework
+Tech: Storyline | JavaScript | SCORM
+Video: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
+===
+ACCESSIBILITY :: Accessible Course Library
+Challenge: An existing course library failed accessibility audits.
+Solution: Rebuilt modules to WCAG standards with keyboard navigation, captions, and proper structure.
+Impact: Passed accessibility audit | Wider learner reach | Reusable accessible templates
+Tech: Storyline | Rise | WCAG | HTML5
+Video: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
+===
+ANALYTICS :: xAPI Learning Analytics
+Challenge: Stakeholders had no visibility into how learners interacted with content.
+Solution: Instrumented courses with xAPI statements feeding a learning record store dashboard.
+Impact: Granular interaction data | Data-driven iteration | Better reporting
+Tech: xAPI | LRS | JavaScript | Storyline
+Video: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`
+    }},
+    motion:{label:"Motion Graphics Designer", data:{
+      name:`Maya Iyer`, role:`Motion Graphics Designer · Mumbai, India`,
+      headline:`Bringing learning to life through motion and story.`,
+      lead:`Motion graphics designer creating animated explainers, course visuals, and micro-animations that make learning memorable.`,
+      videourl:``, photo:av("Maya Iyer","DB2777"),
+      stats:`7+ :: Years animating
+300+ :: Videos produced
+2D/3D :: Motion & design`,
+      email:`your-email@domain.com`, phone:`+91 XXXXX XXXXX`, linkedin:`https://linkedin.com/in/your-profile`,
+      resume:`resume.pdf`, accent:`#DB2777`,
+      about:`I design and animate visuals that turn abstract concepts into clear, engaging stories. From explainer videos to course intros and micro-interactions, I make learning content people actually want to watch.
+
+I work across the full pipeline — concept, storyboard, design, animation, and sound — with a strong eye for pacing, typography, and brand.`,
+      services:`Explainer Videos :: Script-to-screen animated explainers for complex topics.
+Course Visuals :: Custom illustrations, icons, and motion for e-learning.
+Micro-Animations :: Subtle interface and interaction animations that guide learners.
+Brand Motion :: Animated intros, lower-thirds, and motion style guides.`,
+      expertise:`Animation :: After Effects, Premiere Pro, Cinema 4D, Lottie
+Design :: Illustrator, Photoshop, Figma, Typography
+Craft :: Storyboarding, Pacing, Sound Design, Brand Systems`,
+      projects:`EXPLAINER :: Concept Explainer Series
+Challenge: Abstract technical concepts were losing learners in text-heavy modules.
+Solution: Produced a series of 90-second animated explainers with clear visual metaphors.
+Impact: Higher engagement | Better concept recall | Reusable visual library
+Tech: After Effects | Illustrator | Premiere Pro
+Video: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
+===
+MICROLEARNING :: Animated Microlearning
+Challenge: Short reinforcement content felt flat and was easy to skip.
+Solution: Designed punchy, looping micro-animations delivering one idea each.
+Impact: Higher completion | Strong shareability | Consistent visual style
+Tech: After Effects | Lottie | Figma
+Video: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
+===
+BRANDING :: Learning Brand Motion System
+Challenge: Course videos looked inconsistent across teams.
+Solution: Built a motion style guide with templates, intros, and animated assets.
+Impact: Consistent brand | Faster production | Reusable templates
+Tech: After Effects | Cinema 4D | Brand System
+Video: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`
+    }},
+    lmsadmin:{label:"LMS Administrator", data:{
+      name:`Vikram Nair`, role:`LMS Administrator · Hyderabad, India`,
+      headline:`Keeping learning platforms reliable, scalable, and learner-ready.`,
+      lead:`LMS administrator managing platform configuration, integrations, reporting, and support for thousands of learners.`,
+      videourl:``, photo:av("Vikram Nair","0F766E"),
+      stats:`10+ :: Years on platforms
+50k+ :: Learners supported
+99.9% :: Uptime maintained`,
+      email:`your-email@domain.com`, phone:`+91 XXXXX XXXXX`, linkedin:`https://linkedin.com/in/your-profile`,
+      resume:`resume.pdf`, accent:`#0F766E`,
+      about:`I run the learning platforms everything else depends on — configuration, user management, integrations, and reporting. I keep the LMS stable, secure, and easy to use.
+
+I bridge L&D and IT, translating learning needs into platform configuration, automations, and clean data that leadership can trust.`,
+      services:`Platform Administration :: Configure, maintain, and govern the LMS day to day.
+Integrations :: Connect the LMS with HRIS, SSO, content, and analytics tools.
+Reporting :: Build dashboards and compliance reports for stakeholders.
+Learner Support :: Manage enrolments, troubleshooting, and user experience.`,
+      expertise:`Platforms :: Moodle, Cornerstone, Docebo, SuccessFactors
+Integration :: SSO, SCORM, xAPI, HRIS, APIs
+Operations :: Reporting, Compliance, Data Governance, Support`,
+      projects:`MIGRATION :: Enterprise LMS Migration
+Challenge: A legacy LMS could not scale and lacked modern integrations.
+Solution: Led migration to a new platform with data mapping, SSO, and content re-packaging.
+Impact: Zero data loss | Faster logins | Scalable platform
+Tech: Cornerstone | SSO | SCORM | APIs
+Video: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
+===
+AUTOMATION :: Enrolment Automation
+Challenge: Manual enrolments created delays and errors at scale.
+Solution: Built rule-based automated enrolments driven by HRIS attributes.
+Impact: Hours saved weekly | Fewer errors | Timely compliance
+Tech: Docebo | HRIS | APIs | Automation
+Video: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
+===
+REPORTING :: Compliance Reporting Dashboard
+Challenge: Leadership lacked clear visibility into compliance status.
+Solution: Built automated dashboards tracking completion and certification across teams.
+Impact: Real-time visibility | Audit-ready reports | Reduced manual work
+Tech: Power BI | LMS Reporting | SQL
+Video: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`
+    }},
+    lxdesigner:{label:"Learning Experience Designer", data:{
+      name:`Priya Raman`, role:`Learning Experience Designer · Chennai, India`,
+      headline:`Designing learning experiences people love to use.`,
+      lead:`Learning experience (LX) designer blending instructional design, UX, and learning science to craft human-centred learning journeys.`,
+      videourl:``, photo:av("Priya Raman","7C3AED"),
+      stats:`9+ :: Years in LX
+40+ :: Journeys designed
+UX :: Human-centred design`,
+      email:`your-email@domain.com`, phone:`+91 XXXXX XXXXX`, linkedin:`https://linkedin.com/in/your-profile`,
+      resume:`resume.pdf`, accent:`#7C3AED`,
+      about:`I design learning the way a product designer designs apps — starting from learner needs, testing with real users, and iterating. I combine instructional design with UX research and learning science.
+
+My focus is the whole experience: motivation, flow, usability, and outcomes — so learning feels intuitive, relevant, and worth the time.`,
+      services:`Learner Research :: Interviews, journey mapping, and needs analysis.
+Experience Design :: Design end-to-end learning journeys and interactions.
+Prototyping :: Build and test low- and high-fidelity learning prototypes.
+Learning Science :: Apply cognitive and motivational principles to design.`,
+      expertise:`Design :: Learning Experience Design, UX Design, Service Design
+Research :: User Interviews, Usability Testing, Journey Mapping
+Science :: Cognitive Load, Motivation, Spaced Practice`,
+      projects:`JOURNEY :: New-Manager Learning Journey
+Challenge: New managers faced a confusing patchwork of disconnected resources.
+Solution: Designed a guided, milestone-based journey with nudges, practice, and reflection.
+Impact: Clearer path | Higher engagement | Better manager confidence
+Tech: Figma | LMS | Journey Mapping
+Video: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
+===
+RESEARCH :: Learner Research Program
+Challenge: Learning decisions were based on assumptions, not learner needs.
+Solution: Set up a lightweight research practice with interviews and usability testing.
+Impact: Evidence-based design | Fewer redesigns | Stronger stakeholder buy-in
+Tech: User Research | Usability Testing | Figma
+Video: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
+===
+ONBOARDING :: Onboarding Experience Redesign
+Challenge: Onboarding felt overwhelming and impersonal.
+Solution: Prototyped and tested a personalised, role-based onboarding experience.
+Impact: Smoother start | Higher satisfaction | Faster ramp-up
+Tech: Figma | Prototyping | LMS
+Video: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`
+    }},
+    lxproducer:{label:"Learning Experience Producer", data:{
+      name:`Karthik Rao`, role:`Learning Experience Producer · Bengaluru, India`,
+      headline:`Producing learning programs end to end, on time and on point.`,
+      lead:`Learning experience producer coordinating design, media, and delivery to ship high-quality learning programs at scale.`,
+      videourl:``, photo:av("Karthik Rao","EA580C"),
+      stats:`8+ :: Years producing
+60+ :: Programs delivered
+On-time :: Delivery focus`,
+      email:`your-email@domain.com`, phone:`+91 XXXXX XXXXX`, linkedin:`https://linkedin.com/in/your-profile`,
+      resume:`resume.pdf`, accent:`#EA580C`,
+      about:`I'm the connective tissue of a learning team — turning ideas into shipped programs by coordinating designers, developers, media, and stakeholders against clear timelines.
+
+I manage scope, quality, and delivery so learning launches smoothly, on schedule, and with everyone aligned.`,
+      services:`Production Management :: Plan and run learning projects end to end.
+Stakeholder Coordination :: Align SMEs, designers, and sponsors on scope and timelines.
+Media Production :: Coordinate video, audio, and graphics production.
+Quality & Delivery :: Manage reviews, QA, and launch readiness.`,
+      expertise:`Production :: Project Management, Agile, Resource Planning
+Coordination :: Stakeholder Management, Vendor Management, Scoping
+Delivery :: QA, Launch Management, Learning Operations`,
+      projects:`PROGRAM :: Global Onboarding Rollout
+Challenge: A new onboarding program had to launch across regions in a tight window.
+Solution: Produced the end-to-end rollout, coordinating design, media, translation, and delivery.
+Impact: On-time launch | Consistent quality | Smooth multi-region rollout
+Tech: Project Management | LMS | Localisation
+Video: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
+===
+VIDEO :: Video Learning Series
+Challenge: A high-volume video series risked inconsistent quality and slipping deadlines.
+Solution: Set up a production pipeline with templates, review gates, and vendor coordination.
+Impact: Predictable delivery | Consistent quality | Reduced rework
+Tech: Production Pipeline | Premiere Pro | Review Tools
+Video: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
+===
+OPERATIONS :: Learning Operations Setup
+Challenge: Ad-hoc processes made program delivery unpredictable.
+Solution: Established intake, planning, and QA workflows for the learning team.
+Impact: Faster delivery | Clearer priorities | Better stakeholder trust
+Tech: Agile | Workflow Tools | Learning Ops
+Video: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`
+    }},
+    aitech:{label:"AI Learning Technology Specialist", data:{
+      name:`Ananya Krishnan`, role:`AI Learning Technology Specialist · Chennai, India`,
+      headline:`Bringing AI into learning — responsibly and at scale.`,
+      lead:`AI learning technology specialist applying generative AI, automation, and analytics to accelerate content creation and personalise learning.`,
+      videourl:``, photo:av("Ananya Krishnan","4338CA"),
+      stats:`6+ :: Years in learning tech
+10x :: Faster content cycles
+AI :: Responsible adoption`,
+      email:`your-email@domain.com`, phone:`+91 XXXXX XXXXX`, linkedin:`https://linkedin.com/in/your-profile`,
+      resume:`resume.pdf`, accent:`#4338CA`,
+      about:`I help learning teams adopt AI in ways that are practical and responsible — automating content creation, building intelligent learning assistants, and personalising learning at scale.
+
+I bridge learning, data, and emerging technology: evaluating tools, designing workflows, and upskilling teams to work alongside AI.`,
+      services:`AI Content Workflows :: Use generative AI to accelerate content design and production.
+Learning Assistants :: Build AI chat assistants and knowledge tools for learners.
+Personalisation :: Apply data and AI to tailor learning paths.
+Enablement :: Evaluate tools and upskill teams on responsible AI use.`,
+      expertise:`AI & Data :: Generative AI, Prompt Design, Learning Analytics, Automation
+Tools :: LLM Platforms, Vector Search, Python, APIs
+Practice :: Responsible AI, Workflow Design, Change Enablement`,
+      projects:`AUTOMATION :: AI Content Accelerator
+Challenge: Content production could not keep pace with product change.
+Solution: Built AI-assisted workflows for drafting, review, and localisation of learning content.
+Impact: Faster content cycles | Lower production cost | Consistent quality
+Tech: Generative AI | Prompt Design | Automation
+Video: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
+===
+ASSISTANT :: Learning Support Assistant
+Challenge: Learners struggled to find answers across scattered resources.
+Solution: Built an AI assistant grounded in the knowledge base to answer learner questions.
+Impact: Instant answers | Reduced support load | Higher self-service
+Tech: LLM | Vector Search | Knowledge Base
+Video: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
+===
+PERSONALISATION :: Adaptive Learning Paths
+Challenge: One-size-fits-all paths ignored learner differences.
+Solution: Used skills data and AI to recommend personalised next-best learning.
+Impact: More relevant learning | Higher engagement | Better outcomes
+Tech: Learning Analytics | AI | LMS
+Video: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`
+    }},
+    headlxd:{label:"Head of Learning Experience Centre", data:{
+      name:`Deepak Menon`, role:`Head of Learning Experience Centre · Chennai, India`,
+      headline:`Leading a Learning Experience Centre that turns learning into business impact.`,
+      lead:`Learning leader building and running a centralised Learning Experience Centre — uniting strategy, design, technology, and operations to deliver learning at scale.`,
+      videourl:``, photo:av("Deepak Menon","1E3A8A"),
+      stats:`15+ :: Years in learning
+Global :: Centre & teams led
+Strategy :: Business-aligned`,
+      email:`your-email@domain.com`, phone:`+91 XXXXX XXXXX`, linkedin:`https://linkedin.com/in/your-profile`,
+      resume:`resume.pdf`, accent:`#1E3A8A`,
+      about:`I build and lead Learning Experience Centres — the central function that brings strategy, design, technology, and operations together so the whole organisation learns faster and better.
+
+I set the vision and operating model, grow multi-disciplinary teams, and establish the standards and services that let learning scale. I partner with executives to align the Centre's work with business goals and measurable outcomes.`,
+      services:`Centre Strategy :: Define the vision, roadmap, and operating model for the learning function.
+Team & Capability :: Build and develop multi-disciplinary design, media, and technology teams.
+Standards & Governance :: Set design standards, quality, and ways of working across the Centre.
+Business Partnership :: Align learning services and investments with measurable business outcomes.`,
+      expertise:`Leadership :: Team Leadership, Strategy, Change Management, Coaching
+Centre Operations :: Operating Models, Governance, Service Design, Capability Building
+Business Impact :: Business Alignment, Learning Analytics, Stakeholder Management`,
+      projects:`CENTRE :: Learning Experience Centre Build-Out
+Challenge: Learning was scattered across teams with no shared strategy, standards, or central function.
+Solution: Established a centralised Learning Experience Centre with strategy, team structure, services, and standards.
+Impact: Consistent quality | Faster delivery | Stronger business alignment | A scalable function
+Tech: Operating Model | Service Catalogue | Capability Framework
+Video: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
+===
+TRANSFORMATION :: Learning Transformation Program
+Challenge: Legacy learning approaches no longer met business needs.
+Solution: Led a Centre-wide transformation to human-centred, data-informed learning across regions.
+Impact: Modernised learning | Improved outcomes | Global scalability
+Tech: Strategy | Change Management | Analytics
+Video: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
+===
+TEAM :: Building a High-Performing Centre Team
+Challenge: The Centre lacked clear roles, growth paths, and a shared craft across disciplines.
+Solution: Defined roles, coaching, and a shared practice spanning design, media, and technology.
+Impact: Higher engagement | Stronger craft | Retained talent
+Tech: Coaching | Capability Framework | Operating Model
+Video: https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`
+    }}
+  };
+
+  const sampleList = $("sampleList");
+  Object.keys(SAMPLES).forEach(id => {
+    const s = SAMPLES[id];
+    const btn = document.createElement("button");
+    btn.textContent = s.label;
+    btn.addEventListener("click", () => {
+      applyData(s.data);
+      $("sampleOverlay").classList.remove("open");
+      $("status").textContent = "sample loaded ✓";
+      setTimeout(()=>$("status").textContent="",2000);
+    });
+    sampleList.appendChild(btn);
   });
-  gutter.addEventListener("pointermove", e => {
-    if(!dragging) return;
-    const w = Math.min(Math.max(e.clientX, 300), window.innerWidth - 360);
-    app.style.setProperty("--panel-w", w + "px");
+  $("sample").addEventListener("click", () => $("sampleOverlay").classList.add("open"));
+  $("sampleClose").addEventListener("click", () => $("sampleOverlay").classList.remove("open"));
+  $("sampleOverlay").addEventListener("click", e => { if(e.target === $("sampleOverlay")) $("sampleOverlay").classList.remove("open"); });
+
+  // ---------- tutorial video ----------
+  // ↓ Replace this with your own tutorial video link (YouTube, Vimeo, Google Drive, Loom, or an MP4 URL).
+  const TUTORIAL_VIDEO = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+  function tutorialEmbed(raw){
+    const u = (raw||"").trim();
+    if(!u) return '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#fff;font-size:.95rem;padding:20px;text-align:center">Add your tutorial link in the TUTORIAL_VIDEO setting.</div>';
+    const mkI = src => '<iframe src="'+src+'" title="Tutorial" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen></iframe>';
+    const yt = u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([\w-]{11})/);
+    const vimeo = u.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+    const drive = u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]+)/);
+    const loom = u.match(/loom\.com\/(?:share|embed)\/([\w-]+)/);
+    const isFile = /\.(mp4|webm|ogg|ogv|mov|m4v)(\?.*)?$/i.test(u);
+    if(yt) return mkI("https://www.youtube.com/embed/"+yt[1]+"?autoplay=1&rel=0");
+    if(vimeo) return mkI("https://player.vimeo.com/video/"+vimeo[1]+"?autoplay=1");
+    if(drive) return mkI("https://drive.google.com/file/d/"+drive[1]+"/preview");
+    if(loom) return mkI("https://www.loom.com/embed/"+loom[1]);
+    if(isFile) return '<video src="'+u+'" controls autoplay playsinline></video>';
+    return mkI(u);
+  }
+  function closeTutorial(){ $("tutorialBody").innerHTML=""; $("tutorialOverlay").classList.remove("open"); }
+  $("tutorialBtn").addEventListener("click", () => {
+    $("tutorialBody").innerHTML = tutorialEmbed(TUTORIAL_VIDEO);
+    $("tutorialOverlay").classList.add("open");
   });
-  function endDrag(){ if(dragging){ dragging = false; gutter.classList.remove("drag"); } }
-  gutter.addEventListener("pointerup", endDrag);
-  gutter.addEventListener("pointercancel", endDrag);
+  $("tutorialClose").addEventListener("click", closeTutorial);
+  $("tutorialOverlay").addEventListener("click", e => { if(e.target === $("tutorialOverlay")) closeTutorial(); });
+
+  // ---------- restore default content ----------
+  $("defaultBtn").addEventListener("click", () => {
+    applyData(DEFAULTS);
+    $("status").textContent = "defaults restored ✓";
+    setTimeout(()=>$("status").textContent="",2000);
+  });
+
+  // ---------- clear all fields (with undo) ----------
+  let preClear = null;
+  $("clearBtn").addEventListener("click", () => {
+    preClear = {};
+    fields.forEach(f => preClear[f] = $(f).value);
+    fields.forEach(f => { $(f).value = (f === "accent") ? "#2C6E49" : ""; });
+    refresh();
+    $("undoBtn").disabled = false;
+    $("status").textContent = "cleared ✓";
+    setTimeout(()=>$("status").textContent="",2000);
+  });
+  $("undoBtn").addEventListener("click", () => {
+    if(!preClear) return;
+    applyData(preClear);
+    preClear = null;
+    $("undoBtn").disabled = true;
+    $("status").textContent = "restored ✓";
+    setTimeout(()=>$("status").textContent="",1500);
+  });
 
   refresh(); // initial render
 </script>
